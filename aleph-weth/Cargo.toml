@@ -14,7 +14,12 @@ ink_lang = { version = "3.3", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
-mytoken = { path = "../mytoken", default-features = false, features = ["ink-as-dependency"] }
+eth-bridge = { path = "../eth-bridge", version = "0.1.0", default-features = false, features = ["ink-as-dependency"] }
+
+sha3 = { package = "sha3", default-features = false, version = "0.10.4" }
+
+[dev-dependencies]
+hex = "0.4"
 
 [lib]
 name = "aleph_weth"
@@ -33,5 +38,7 @@ std = [
     "ink_primitives/std",
     "scale/std",
     "scale-info/std",
+
+    "eth-bridge/std"
 ]
 ink-as-dependency = []

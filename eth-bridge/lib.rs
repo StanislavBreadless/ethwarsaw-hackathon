@@ -4,48 +4,55 @@ use ink_lang as ink;
 
 
 #[ink::contract]
-mod mytoken {
+pub mod eth_bridge {
     use ink_storage::{traits::{SpreadAllocate, PackedLayout, SpreadLayout, }, Mapping};
-    use parity_crypto::Keccak256;
 
     use scale::{Encode, Decode};
+    use sha3::{Keccak256, Digest};
 
     use scale::alloc::vec::Vec;
-
-
-    // #[derive(Decode, TypeInfo,Encode)]
-    // pub struct H512([u64; 8]);
-    // #[derive(Decode, TypeInfo,Encode)]
-    // pub struct H128([u64; 2]);
 
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     #[derive(Default, Decode, Encode, Eq, PartialEq, SpreadLayout, PackedLayout)]
     pub struct H256([u8; 32]);
 
+    impl H256 {
+        fn from_slice(data: &[u8]) -> Self {
+            if data.len() != 32 {
+                panic!("The length must be 32 bytes");
+            }
+            let mut arr = [0u8; 32];
+            // arr.copy_from_slice(data);
+
+            H256(arr)
+        }
+    }
+
+    fn keccak256(digest: &[u8]) -> H256 {
+        let mut hasher = Keccak256::new();
+        hasher.update(digest);
+        let generic_array = hasher.finalize();
+        H256::from_slice(generic_array.as_slice())
+    }
 
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order
     /// to add new static storage fields to your contract.
     #[ink(storage)]
     #[derive(SpreadAllocate)]
-    pub struct Mytoken {
-        total_supply: u32,
-        balances: Mapping<AccountId, u32>,
+    pub struct EthBridge {
         block_hashes: Mapping<u64, H256>,
 
         admin: AccountId
     }
 
     use ink_lang::utils::initialize_contract;
-    impl Mytoken {
+    impl EthBridge {
         /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
-        pub fn new_token(supply: u32) -> Self {
+        pub fn new() -> Self {
             initialize_contract(|contract: &mut Self| {
                 let caller = Self::env().caller();
-                contract.balances.insert(&caller, &supply);
-                contract.total_supply = supply;
-
                 contract.admin = caller;
             })
         }
@@ -57,31 +64,6 @@ mod mytoken {
             } 
         }
 
-        #[ink(message)]
-        pub fn total_supply(&self) -> u32 {
-            self.total_supply
-        }
-        
-        #[ink(message)]
-        pub fn balance_of(&self, account: AccountId) -> u32 {
-            match self.balances.get(&account) {
-                Some(value) => value,
-                None => 0,
-            }
-        }
-
-        #[ink(message)]
-        pub fn transfer(&mut self, recipient: AccountId, amount: u32) {
-            let sender = self.env().caller();
-            let sender_balance = self.balance_of(sender);
-            if sender_balance < amount {
-                return;
-            }
-            self.balances.insert(sender, &(sender_balance - amount));
-            let recipient_balance = self.balance_of(recipient);
-            self.balances.insert(recipient, &(recipient_balance + amount));
-        }
-
         /// Used to add a block header.
         /// TODO: should validate Ethereum PoW (PoS) + support re-orgs.
         #[ink(message)]
@@ -90,7 +72,7 @@ mod mytoken {
             // TODO: validate the block header with proof of work
             // For now, we trust the admin to submit only correct blocks.
             
-            self.block_hashes.insert(block_number, &H256(block_header.keccak256()));
+            self.block_hashes.insert(block_number, &keccak256(&block_header));
         }
 
         /// Verifies whether a certain tx receipt happened on Ethereum block.
@@ -150,7 +132,7 @@ mod mytoken {
             let saved_block_hash: H256 = self.block_hashes.get(block_number).expect("Block not found");
 
             // Sanity check that the block hash corresponds to the provided block header
-            if H256(rlp_encoded_block_header.keccak256()) != saved_block_hash {
+            if keccak256(rlp_encoded_block_header) != saved_block_hash {
                 return false;
             }
 
@@ -188,35 +170,8 @@ mod mytoken {
 
     #[cfg(test)]
     mod tests {
-        use crate::mytoken::Mytoken;
+        use crate::eth_bridge::EthBridge;
         use ink_env::{test, DefaultEnvironment};
         use ink_lang as ink;
-    
-        #[ink::test]
-        fn total_supply_works() {
-            let mytoken = Mytoken::new_token(1000);
-            assert_eq!(mytoken.total_supply(), 1000);
-        }
-    
-        #[ink::test]
-        fn balance_of_works() {
-            let accounts = test::default_accounts::<DefaultEnvironment>();
-            test::set_caller::<DefaultEnvironment>(accounts.alice);
-            let mytoken = Mytoken::new_token(1000);
-            assert_eq!(mytoken.balance_of(accounts.alice), 1000);
-            assert_eq!(mytoken.balance_of(accounts.bob), 0);
-        }
-    
-        #[ink::test]
-        fn transfer_works() {
-            let accounts = test::default_accounts::<DefaultEnvironment>();
-            test::set_caller::<DefaultEnvironment>(accounts.alice);
-            let mut mytoken = Mytoken::new_token(1000);
-            assert_eq!(mytoken.balance_of(accounts.alice), 1000);
-            assert_eq!(mytoken.balance_of(accounts.bob), 0);
-            mytoken.transfer(accounts.bob, 100);
-            assert_eq!(mytoken.balance_of(accounts.alice), 900);
-            assert_eq!(mytoken.balance_of(accounts.bob), 100);
-        }
     }
 }

@@ -1,5 +1,5 @@
 [package]
-name = "mytoken"
+name = "eth-bridge"
 version = "0.1.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
@@ -14,16 +14,16 @@ ink_lang = { version = "3.3", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
-ethereum_types = { package = "ethereum-types", version = "0.13.1" }
-parity-crypto = { package = "parity-crypto", version = "0.9.0" }
-
+sha3 = { package = "sha3", default-features = false, version = "0.10.4" }
 
 [lib]
-name = "mytoken"
+name = "eth_bridge"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
 	"cdylib",
+    # Used for ABI generation.
+    "rlib",
 ]
 
 [features]
