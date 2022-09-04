@@ -2,6 +2,6 @@
 import { providers } from 'ethers'
 const eth = new providers.JsonRpcProvider('https://ropsten.infura.io/v3/[infura_project_id]')
 
-export const sendBlocksToAlef = await (blocks) => {
+export const sendBlocksToAlef = (blocks) => {
     
 }
