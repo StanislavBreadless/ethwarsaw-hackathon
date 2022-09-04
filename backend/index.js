@@ -40,6 +40,4 @@ async function main() {
         }
 
     }
-        
-
 }
