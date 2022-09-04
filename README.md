@@ -33,6 +33,7 @@ Most of the validation logic can be made constant with respect to the number of 
 - The implementation of the bridged Ethereum can that uses the contract above to receive events from Ethereum about bridged funds [here](./contracts/aleph/aleph-weth/).
 - The L1 bridge of Ethereum is [here](./contracts/eth/AlephConnector).
 - The backend deployment used for tracking the events of the deposit used for better UX can be found [here](./backend).
+- The front-end for Ethereum bridge can be found [here](./eth-frontend).
 
 ## What is done?
 
