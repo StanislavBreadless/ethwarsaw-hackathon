@@ -38,10 +38,12 @@ Most of the validation logic can be made constant with respect to the number of 
 
 - [+] Basic implementation of the Ethereum -> Aleph Zero message passing.
 - [+] Backend deployment used for tracking deposit events.
+- [+] Front-end for the Ethereum part of the bridge.
 
 ## What is to be done?
 
 - [ ] Consensus validation logic.
 - [ ] Full event inclusion validation.
 - [ ] Integrate zero-knowledge proofs. 
+- [ ] Front-end for the Aleph Zero part of the bridge.
 
